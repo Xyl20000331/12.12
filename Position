@@ -1,0 +1,119 @@
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+public class Position {
+    private String code;
+    long quantity;
+    BigDecimal unitPrice;
+    BigDecimal averageUnitPrice;
+    BigDecimal marketPrice = BigDecimal.ZERO;
+    private BigDecimal profitAndLoss = BigDecimal.ZERO;
+    private BigDecimal marketValue = BigDecimal.ZERO;
+    private BigDecimal unrealizedPAD = BigDecimal.ZERO;
+
+    public void add(long quantity, BigDecimal unitPrice) {
+        BigDecimal oldValue = this.averageUnitPrice.multiply(new BigDecimal(this.quantity));
+        BigDecimal newValue = unitPrice.multiply(new BigDecimal(quantity));
+        this.averageUnitPrice = oldValue.add(newValue).divide(new BigDecimal((this.quantity)).add(new BigDecimal(quantity)), RoundingMode.HALF_UP);
+        this.quantity += quantity;
+        this.marketPrice = this.marketPrice.add(unitPrice.multiply(new BigDecimal(quantity)));
+    }
+
+    public BigDecimal sell(long quantity, BigDecimal unitPrice) {
+//        if (this.quantity < quantity) {
+//            return BigDecimal.ZERO;
+//        }
+        this.quantity -= quantity;
+
+        this.profitAndLoss = this.profitAndLoss.add(unitPrice.subtract(this.averageUnitPrice).multiply(new BigDecimal(quantity)));
+
+        this.marketPrice = this.marketPrice.subtract(unitPrice.multiply(new BigDecimal(quantity)));
+        return this.marketPrice;
+    }
+
+    public Position(String code, long quantity, BigDecimal unitPrice) {
+        this.code = code;
+        this.unitPrice = unitPrice;
+        this.averageUnitPrice = unitPrice;
+        this.add(quantity, unitPrice);
+    }
+
+//    public Position(String code, long quantity, BigDecimal unitPrice, BigDecimal marketValue, BigDecimal profitAndLoss) {
+//        this.code = code;
+//        this.quantity = quantity;
+//        this.unitPrice = unitPrice;
+//        this.marketValue = marketValue;
+//        this.profitAndLoss = profitAndLoss;
+//    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public long getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(long quantity) {
+        this.quantity = quantity;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
+    public BigDecimal getMarketPrice() {
+        return marketPrice;
+    }
+
+    public void setMarketPrice(BigDecimal marketValue) {
+        this.marketPrice = marketValue;
+    }
+
+    public BigDecimal getProfitAndLoss() {
+        return profitAndLoss;
+    }
+
+    public void setProfitAndLoss(BigDecimal profitAndLoss) {
+        this.profitAndLoss = profitAndLoss;
+    }
+
+
+    public BigDecimal getAverageUnitPrice() {
+        return averageUnitPrice;
+    }
+
+    public void setAverageUnitPrice(BigDecimal averageUnitPrice) {
+        this.averageUnitPrice = averageUnitPrice;
+    }
+
+//    public BigDecimal getCol4() {
+//        return profitAndLoss;
+//    }
+
+    public String getMarketValue() {
+        BigDecimal lastPrice = Portfolio.getInstance().getLastPrice(this.code);
+        if (lastPrice == null) {
+            return "---";
+        }
+
+        return new BigDecimal(this.quantity).multiply(lastPrice).toString();
+    }
+
+    public String getUnrealizedPAD() {
+        BigDecimal lastPrice = Portfolio.getInstance().getLastPrice(this.code);
+        if (lastPrice == null) {
+            return "---";
+        }
+
+        return new BigDecimal(this.quantity).multiply(lastPrice.subtract(this.averageUnitPrice)).toString();
+    }
+}
